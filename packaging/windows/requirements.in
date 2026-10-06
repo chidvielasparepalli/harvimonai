@@ -1,0 +1,17 @@
+# All application requirements, plus imports absent from the original manifest.
+-r ../../requirements.txt
+PyQt6-WebEngine
+PyPDF2
+ddgs
+python-docx
+edge-tts
+kokoro>=0.9
+miniaudio
+pandas
+pdfplumber
+pydub
+nvidia-ml-py
+vosk
+openwakeword
+pip
+setuptools<81

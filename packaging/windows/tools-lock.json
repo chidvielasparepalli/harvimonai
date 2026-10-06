@@ -1,0 +1,18 @@
+{
+  "node.zip": {
+    "url": "https://nodejs.org/dist/v22.23.3/node-v22.23.3-win-x64.zip",
+    "sha256": "2b0ff57b049cda1bbcea2240eec20467018713c1efe1f7360c2681859b90ed71"
+  },
+  "git.zip": {
+    "url": "https://github.com/git-for-windows/git/releases/download/v2.56.0.windows.2/MinGit-2.56.0.2-64-bit.zip",
+    "sha256": "da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
+  },
+  "adb.zip": {
+    "url": "https://dl.google.com/android/repository/platform-tools-latest-windows.zip",
+    "sha256": "45f4d63113e895ebde0c90f194099a4676b6ac653bd28d54314a9e022bbc1a99"
+  },
+  "ffmpeg.zip": {
+    "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+    "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"
+  }
+}

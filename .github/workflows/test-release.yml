@@ -49,4 +49,5 @@ jobs:
             ${{ runner.temp }}/harvimon-clean-test/test-report.json
             ${{ runner.temp }}/harvimon-clean-test/application.log
             ${{ runner.temp }}/harvimon-clean-test/first-run.png
+            ${{ runner.temp }}/harvimon-clean-test/main-window.png
             tested-sha256.txt
