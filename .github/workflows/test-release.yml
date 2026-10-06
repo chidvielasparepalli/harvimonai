@@ -1,0 +1,52 @@
+name: Test release executable
+on:
+  workflow_dispatch:
+    inputs:
+      asset_id:
+        required: true
+        type: string
+      sha256:
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  standalone:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - name: Download exact draft release asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET_ID: ${{ inputs.asset_id }}
+          EXPECTED_SHA: ${{ inputs.sha256 }}
+        run: |
+          $headers = @{ Authorization = "Bearer $env:GH_TOKEN"; Accept = 'application/octet-stream' }
+          Invoke-WebRequest -Uri "https://api.github.com/repos/${{ github.repository }}/releases/assets/$env:ASSET_ID" -Headers $headers -OutFile HARVIMON-AI.exe
+          $actual = (Get-FileHash HARVIMON-AI.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA.ToLowerInvariant()) { throw 'Release asset checksum mismatch' }
+          $actual | Set-Content tested-sha256.txt
+      - name: Launch without checkout or developer runtime paths
+        shell: pwsh
+        run: |
+          $env:CHIDVI_HOME = Join-Path $env:RUNNER_TEMP 'harvimon-clean-test'
+          $env:PATH = "$env:WINDIR\System32;$env:WINDIR;$env:WINDIR\System32\WindowsPowerShell\v1.0"
+          foreach ($name in @('PYTHONPATH','PYTHONHOME','VIRTUAL_ENV','CONDA_PREFIX','QT_PLUGIN_PATH')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $process = Start-Process -FilePath (Join-Path $pwd 'HARVIMON-AI.exe') -ArgumentList '--self-test' -WindowStyle Hidden -PassThru
+          if (-not $process.WaitForExit(900000)) { $process.Kill(); throw 'Standalone test timed out' }
+          Get-Content (Join-Path $env:CHIDVI_HOME 'application.log')
+          if ($process.ExitCode -ne 0) { throw "Standalone test failed: $($process.ExitCode)" }
+          $report = Get-Content (Join-Path $env:CHIDVI_HOME 'test-report.json') -Raw | ConvertFrom-Json
+          if (-not $report.passed) { throw 'Standalone report failed' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: standalone-validation
+          path: |
+            ${{ runner.temp }}/harvimon-clean-test/test-report.json
+            ${{ runner.temp }}/harvimon-clean-test/application.log
+            ${{ runner.temp }}/harvimon-clean-test/first-run.png
+            tested-sha256.txt
