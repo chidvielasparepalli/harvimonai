@@ -8,11 +8,11 @@
     "sha256": "da35e72aa21c005a5a0d298cfbae110bc1609a815730ea0dde84b01a1b3cd3be"
   },
   "adb.zip": {
-    "url": "https://dl.google.com/android/repository/platform-tools-latest-windows.zip",
+    "url": "https://dl.google.com/android/repository/platform-tools_r37.0.1-win.zip",
     "sha256": "45f4d63113e895ebde0c90f194099a4676b6ac653bd28d54314a9e022bbc1a99"
   },
   "ffmpeg.zip": {
-    "url": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+    "url": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip",
     "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"
   }
 }

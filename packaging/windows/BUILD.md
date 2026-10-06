@@ -2,7 +2,7 @@
 
 Judges only download the EXE from GitHub Releases. These instructions are for maintainers.
 
-Use Windows x64, CPython **3.11.9 x64**, internet access and at least 12 GB free disk space. From the repository run:
+Check out the linked CHIDVI-556 source revision and place this repository's `packaging/windows` directory at its root. Use Windows x64, CPython **3.11.9 x64**, internet access and at least 12 GB free disk space. From the repository run:
 
 ```powershell
 .\packaging\windows\build.ps1 -Python 'C:\path\to\Python311\python.exe'
@@ -31,4 +31,4 @@ Publish the release only after validation. Verify the uploaded asset's digest eq
 
 ## Dependency notices
 
-The payload retains Python's license, installed packages' distribution metadata/license files, Qt license resources, Node's LICENSE, MinGit licenses, Android platform-tool NOTICE and barehands' license. Their respective license terms apply. The original application's source remains at its source repository; distribute corresponding source/license notices for components that require them. No private keys, personal memory, OAuth tokens or developer environment files are included.
+The payload retains Python's license, installed packages' distribution metadata/license files, Qt license resources, Node's LICENSE, MinGit licenses, Android platform-tool NOTICE, FFmpeg licenses and barehands' license. Their respective license terms apply. The original application's source remains at its source repository; distribute corresponding source/license notices for components that require them. No private keys, personal memory, OAuth tokens or developer environment files are included.
