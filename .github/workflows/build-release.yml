@@ -1,0 +1,80 @@
+name: Build and validate Windows executable
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: distribution
+      - uses: actions/checkout@v4
+        with:
+          repository: chidvielasparepalli/CHIDVI-556
+          ref: 8674caf
+          path: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.9'
+          architecture: x64
+      - name: Build unchanged desktop application
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force source/packaging | Out-Null
+          Copy-Item distribution/packaging/windows source/packaging/windows -Recurse
+          Set-Location source
+          ./packaging/windows/build.ps1 -Python (Get-Command python).Source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-executable
+          compression-level: 0
+          path: |
+            source/dist/HARVIMON-AI.exe
+            source/dist/SHA256SUMS.txt
+  clean-test:
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+      - name: Verify exact EXE on a fresh Windows VM without source or project environment
+        shell: pwsh
+        run: |
+          $expected = (Get-Content SHA256SUMS.txt).Split(' ')[0]
+          $actual = (Get-FileHash HARVIMON-AI.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($expected -ne $actual) { throw 'Checksum mismatch' }
+          $env:CHIDVI_HOME = Join-Path $env:RUNNER_TEMP 'harvimon-clean-test'
+          $env:PATH = "$env:WINDIR\System32;$env:WINDIR;$env:WINDIR\System32\WindowsPowerShell\v1.0"
+          foreach ($name in @('PYTHONPATH','PYTHONHOME','VIRTUAL_ENV','CONDA_PREFIX','QT_PLUGIN_PATH')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $process = Start-Process -FilePath (Join-Path $pwd 'HARVIMON-AI.exe') -ArgumentList '--self-test' -WindowStyle Hidden -PassThru
+          if (-not $process.WaitForExit(900000)) { $process.Kill(); throw 'Standalone test timed out' }
+          Get-Content (Join-Path $env:CHIDVI_HOME 'application.log')
+          if ($process.ExitCode -ne 0) { throw "Standalone test failed: $($process.ExitCode)" }
+          $report = Get-Content (Join-Path $env:CHIDVI_HOME 'test-report.json') -Raw | ConvertFrom-Json
+          if (-not $report.passed) { throw 'Standalone report failed' }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clean-windows-validation
+          path: |
+            ${{ runner.temp }}/harvimon-clean-test/test-report.json
+            ${{ runner.temp }}/harvimon-clean-test/application.log
+            ${{ runner.temp }}/harvimon-clean-test/first-run.png
+            ${{ runner.temp }}/harvimon-clean-test/main-window.png
+            SHA256SUMS.txt
+      - name: Stage tested candidate in draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST -H 'Content-Type: application/octet-stream' 'https://uploads.github.com/repos/${{ github.repository }}/releases/404887379/assets?name=HARVIMON-AI-runner.exe' --input HARVIMON-AI.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Draft executable upload failed' }
+          gh api --method POST -H 'Content-Type: application/octet-stream' 'https://uploads.github.com/repos/${{ github.repository }}/releases/404887379/assets?name=runner-SHA256SUMS.txt' --input SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Draft checksum upload failed' }
